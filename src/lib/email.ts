@@ -10,7 +10,7 @@ export async function sendVerificationEmail(
 
   await resend.emails.send({
     from: process.env.EMAIL_FROM as string,
-    to: email,
+    to: [email],
     subject: "Verify your NexSyncHub account",
     html: `
       <div style="font-family: Arial, sans-serif;">
