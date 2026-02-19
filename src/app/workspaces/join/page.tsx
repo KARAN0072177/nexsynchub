@@ -1,11 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function JoinWorkspacePage() {
     const [code, setCode] = useState("");
-    const router = useRouter();
+    const [joinedWorkspaceId, setJoinedWorkspaceId] = useState<string | null>(null);
 
     async function handleJoin() {
         const res = await fetch("/api/workspaces/join", {
@@ -18,14 +18,52 @@ export default function JoinWorkspacePage() {
         const data = await res.json();
 
         if (res.ok) {
-            router.push(`/workspace/${data.workspaceId}/dashboard`);
-        } else {
+            setJoinedWorkspaceId(data.workspaceId);
+        }
+
+        else {
             alert(data.error || "Failed");
         }
     }
 
+    if (joinedWorkspaceId) {
+        return (
+            <div className="max-w-md mx-auto p-6 border rounded">
+
+                <h1 className="text-xl font-bold mb-2">
+                    Joined Workspace 🎉
+                </h1>
+
+                <p className="mb-4">
+                    You joined workspace with ID: <b>{joinedWorkspaceId}</b>
+                </p>
+
+                <div className="flex gap-3">
+                    <Link
+                        href="/workspaces"
+                        className="bg-black text-white px-4 py-2 rounded"
+                    >
+                        View Workspaces
+                    </Link>
+
+                    <button
+                        onClick={() => {
+                            setJoinedWorkspaceId(null);
+                            setCode("");
+                        }}
+                        className="border px-4 py-2 rounded"
+                    >
+                        Join Another
+                    </button>
+                </div>
+
+            </div>
+        );
+    }
+
     return (
         <div className="max-w-md mx-auto p-6">
+
             <h1 className="text-xl font-bold mb-4">
                 Join Workspace
             </h1>
@@ -34,7 +72,7 @@ export default function JoinWorkspacePage() {
                 className="border w-full p-2 mb-4"
                 placeholder="Invite Code"
                 value={code}
-                onChange={e => setCode(e.target.value)}
+                onChange={(e) => setCode(e.target.value)}
             />
 
             <button
@@ -43,6 +81,7 @@ export default function JoinWorkspacePage() {
             >
                 Join
             </button>
+
         </div>
     );
 }

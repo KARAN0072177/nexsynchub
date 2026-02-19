@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
 
     const existingMember = await WorkspaceMember.findOne({
       workspaceId: workspace._id,
-      userId: user._id,
+      userId: user.userId,
     });
 
     if (existingMember) {
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     await WorkspaceMember.create({
       workspaceId: workspace._id,
-      userId: user._id,
+      userId: user.userId,
       roleId: defaultRole?._id,
     });
 
