@@ -5,6 +5,7 @@ import "@/models/User";
 import "@/models/Workspace";
 import "@/models/WorkspaceRole";
 import "@/models/WorkspaceMember";
+import "@/models/Channel";
 
 export async function connectDB() {
   if (mongoose.connection.readyState >= 1) return;
