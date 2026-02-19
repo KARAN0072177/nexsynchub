@@ -61,7 +61,7 @@ export async function GET(
     await requirePermission(
       user.userId,
       workspaceId,
-      "chat.send"
+      "chat.view"
     );
 
     const channels = await Channel.find({

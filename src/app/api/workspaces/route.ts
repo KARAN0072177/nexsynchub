@@ -29,6 +29,7 @@ const ALL_PERMISSIONS = [
 
   "chat.send",
   "chat.delete",
+  "chat.view",
 
   "files.upload",
   "files.delete",
@@ -102,7 +103,7 @@ export async function POST(req: NextRequest) {
       {
         workspaceId: workspace._id,
         name: "Viewer",
-        permissions: [],
+        permissions: ["chat.view"],
       },
     ]);
 

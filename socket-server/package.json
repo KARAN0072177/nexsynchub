@@ -1,0 +1,13 @@
+{
+  "name": "nexsynchub-socket",
+  "version": "1.0.0",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "socket.io": "^4.7.5",
+    "axios": "^1.6.7"
+  }
+}
