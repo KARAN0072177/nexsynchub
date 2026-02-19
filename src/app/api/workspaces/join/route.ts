@@ -9,7 +9,7 @@ export async function POST(req: NextRequest) {
   try {
     await connectDB();
 
-    const user = await requireAuth(req);
+    const user = await requireAuth();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

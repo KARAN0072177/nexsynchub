@@ -13,7 +13,7 @@ export async function POST(
   try {
     await connectDB();
 
-    const user = await requireAuth(req);
+    const user = await requireAuth();
 
     await requirePermission(
       user.userId,

@@ -40,7 +40,7 @@ export async function POST(req: NextRequest) {
   try {
     await connectDB();
 
-    const user = await requireAuth(req);
+    const user = await requireAuth();
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       slug,
       description,
       inviteCode,
-      createdBy: user._id,
+      createdBy: user.userId,
     });
 
     // Create Owner Role
@@ -109,7 +109,7 @@ export async function POST(req: NextRequest) {
     // Add Creator as Owner
     await WorkspaceMember.create({
       workspaceId: workspace._id,
-      userId: user._id,
+      userId: user.userId,
       roleId: ownerRole._id,
     });
 

@@ -1,6 +1,6 @@
 import { Schema, model, models, Types } from "mongoose";
 
-const WorkspaceMemberSchema = new Schema(
+const WorkspaceRoleSchema = new Schema(
   {
     workspaceId: {
       type: Types.ObjectId,
@@ -8,35 +8,33 @@ const WorkspaceMemberSchema = new Schema(
       required: true,
     },
 
-    userId: {
-      type: Types.ObjectId,
-      ref: "User",
+    name: {
+      type: String,
       required: true,
+      trim: true,
     },
 
-    roleId: {
-      type: Types.ObjectId,
-      ref: "WorkspaceRole",
-      required: true,
+    description: {
+      type: String,
     },
 
-    invitedBy: {
-      type: Types.ObjectId,
-      ref: "User",
+    permissions: {
+      type: [String],
+      default: [],
     },
 
-    isActive: {
+    isSystemRole: {
       type: Boolean,
-      default: true,
+      default: false,
     },
   },
-  { timestamps: { createdAt: "joinedAt" } }
+  { timestamps: true }
 );
 
-WorkspaceMemberSchema.index(
-  { workspaceId: 1, userId: 1 },
+WorkspaceRoleSchema.index(
+  { workspaceId: 1, name: 1 },
   { unique: true }
 );
 
-export default models.WorkspaceMember ||
-  model("WorkspaceMember", WorkspaceMemberSchema);
+export default models.WorkspaceRole ||
+  model("WorkspaceRole", WorkspaceRoleSchema);

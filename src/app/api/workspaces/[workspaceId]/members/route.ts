@@ -1,27 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
-import {connectDB} from "@/lib/db";
+import { connectDB } from "@/lib/db";
 import WorkspaceMember from "@/models/WorkspaceMember";
-import WorkspaceRole from "@/models/WorkspaceRole";
 import { requireAuth } from "@/lib/requireAuth";
 import { requirePermission } from "@/lib/requirePermission";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { workspaceId: string } }
+  context: { params: Promise<{ workspaceId: string }> }
 ) {
+  const { workspaceId } = await context.params;
+
   try {
     await connectDB();
 
-    const user = await requireAuth(req);
+    const user = await requireAuth();
 
     await requirePermission(
       user.userId,
-      params.workspaceId,
+      workspaceId,
       "members.invite"
     );
 
     const members = await WorkspaceMember.find({
-      workspaceId: params.workspaceId,
+      workspaceId,
       isActive: true,
     })
       .populate("userId", "email")
