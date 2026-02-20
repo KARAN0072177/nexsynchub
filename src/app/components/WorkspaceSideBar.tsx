@@ -31,6 +31,13 @@ export default function WorkspaceSidebar() {
           Members
         </Link>
 
+        <Link
+          href={`/workspace/${workspaceId}/tasks`}
+          className="block hover:text-white"
+        >
+          Tasks
+        </Link>
+
         <ChannelsSidebar />
 
       </nav>
