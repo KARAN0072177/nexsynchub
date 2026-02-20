@@ -9,7 +9,7 @@ interface Message {
     content: string;
     senderId: {
         username: string;
-       // email: string;
+        // email: string;
     };
 }
 
@@ -21,11 +21,16 @@ export default function ChannelPage() {
     const [selectedMessage, setSelectedMessage] = useState<any>(null);
     const [title, setTitle] = useState("");
 
+    const [priority, setPriority] = useState("medium");
+    const [members, setMembers] = useState<any[]>([]);
+    const [assignees, setAssignees] = useState<string[]>([]);
+
     const [messages, setMessages] = useState<Message[]>([]);
     const [text, setText] = useState("");
 
     // Load history
     useEffect(() => {
+        // Load messages
         fetch(
             `/api/workspaces/${workspaceId}/channels/${channelId}/messages`,
             { credentials: "include" }
@@ -33,13 +38,17 @@ export default function ChannelPage() {
             .then((res) => res.json())
             .then((data) => setMessages(data.messages));
 
+        // Load permissions
         fetch(`/api/workspaces/${workspaceId}/permissions`, {
             credentials: "include",
         })
             .then(res => res.json())
             .then(data => setCanSend(data.canSend));
 
+        // Load members
+        loadMembers();
 
+        // Socket
         socket.connect();
         socket.emit("join-channel", { channelId });
 
@@ -70,6 +79,16 @@ export default function ChannelPage() {
     function openConvertModal(message: any) {
         setSelectedMessage(message);
         setTitle("");
+        setAssignees([]);
+    }
+
+    async function loadMembers() {
+        const res = await fetch(
+            `/api/workspaces/${workspaceId}/members`,
+            { credentials: "include" }
+        );
+        const data = await res.json();
+        setMembers(data.members || []);
     }
 
     async function createTask() {
@@ -84,6 +103,8 @@ export default function ChannelPage() {
                 body: JSON.stringify({
                     title,
                     description: selectedMessage.content,
+                    priority,
+                    assignees,
                     sourceMessageId: selectedMessage._id,
                     sourceChannelId: channelId,
                 }),
@@ -91,6 +112,8 @@ export default function ChannelPage() {
         );
 
         setSelectedMessage(null);
+        setAssignees([]);
+        setPriority("medium");
     }
 
     return (
@@ -163,6 +186,7 @@ export default function ChannelPage() {
                             Create Task
                         </h2>
 
+                        {/* Title */}
                         <input
                             className="border w-full p-2 mb-3"
                             placeholder="Task title"
@@ -170,11 +194,52 @@ export default function ChannelPage() {
                             onChange={(e) => setTitle(e.target.value)}
                         />
 
+                        {/* Description */}
                         <textarea
                             className="border w-full p-2 mb-3"
                             value={selectedMessage.content}
                             disabled
                         />
+
+                        {/* Priority */}
+                        <select
+                            className="border w-full p-2 mb-3"
+                            value={priority}
+                            onChange={(e) => setPriority(e.target.value)}
+                        >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                        </select>
+
+                        {/* Assignees */}
+                        <div className="mb-3">
+                            <p className="text-sm mb-1">Assign To</p>
+
+                            <div className="space-y-1 max-h-32 overflow-y-auto">
+                                {members.map((m) => (
+                                    <label
+                                        key={m.userId._id}
+                                        className="flex items-center gap-2 text-sm"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            checked={assignees.includes(m.userId._id)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setAssignees([...assignees, m.userId._id]);
+                                                } else {
+                                                    setAssignees(
+                                                        assignees.filter(id => id !== m.userId._id)
+                                                    );
+                                                }
+                                            }}
+                                        />
+                                        {m.userId.username}
+                                    </label>
+                                ))}
+                            </div>
+                        </div>
 
                         <div className="flex justify-end gap-3">
 
@@ -189,7 +254,7 @@ export default function ChannelPage() {
                                 onClick={createTask}
                                 className="bg-blue-600 text-white px-4 py-2"
                             >
-                                Create
+                                Create Task
                             </button>
 
                         </div>

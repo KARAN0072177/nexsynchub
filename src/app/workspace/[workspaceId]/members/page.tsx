@@ -6,7 +6,7 @@ import { useParams } from "next/navigation";
 interface Member {
     _id: string;
     userId: {
-        email: string;
+        username: string;
     };
     roleId: {
         name: string;
@@ -69,7 +69,7 @@ export default function MembersPage() {
                                     className="border-t border-neutral-800"
                                 >
                                     <td className="p-3 text-sm">
-                                        {m.userId.email}
+                                        {m.userId.username}
                                     </td>
                                     <td className="p-3 text-sm text-neutral-400">
                                         {m.roleId.name}

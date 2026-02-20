@@ -25,7 +25,7 @@ export async function GET(
       workspaceId,
       isActive: true,
     })
-      .populate("userId", "email")
+      .populate("userId", "username")
       .populate("roleId", "name");
 
     return NextResponse.json({ members });
