@@ -8,7 +8,8 @@ interface Message {
     _id: string;
     content: string;
     senderId: {
-        email: string;
+        username: string;
+       // email: string;
     };
 }
 
@@ -103,7 +104,7 @@ export default function ChannelPage() {
                     >
                         <div>
                             <span className="text-neutral-400 font-medium">
-                                {m.senderId?.email}
+                                {m.senderId?.username || "Unknown"}
                             </span>
                             <span className="ml-2 text-white">
                                 {m.content}

@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 
 interface User {
+  username: string;
   _id: string;
   email: string;
 }
@@ -107,7 +108,7 @@ export default function TasksPage() {
 
                 {task.assignees.map(a => (
                   <div key={a._id}>
-                    {a.email}
+                    {a.username}
                   </div>
                 ))}
               </div>

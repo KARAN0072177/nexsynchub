@@ -30,7 +30,7 @@ export async function GET(
       workspaceId,
       channelId,
     })
-      .populate("senderId", "email")
+      .populate("senderId", "username")
       .sort({ createdAt: 1 });
 
     return NextResponse.json({ messages });

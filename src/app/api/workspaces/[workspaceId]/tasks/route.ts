@@ -79,12 +79,13 @@ export async function GET(
     );
 
     const tasks = await Task.find({ workspaceId })
-      .populate("assignees", "email")
+      .populate("assignees", "username")
       .sort({ createdAt: -1 });
 
     return NextResponse.json({ tasks });
 
-  } catch {
+  } catch (err) {
+    console.error(err);
     return NextResponse.json(
       { error: "Forbidden" },
       { status: 403 }
