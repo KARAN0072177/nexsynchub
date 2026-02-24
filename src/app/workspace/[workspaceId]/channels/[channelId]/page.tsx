@@ -3,13 +3,24 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { socket } from "@/lib/socket";
+import { useRef } from "react";
 
 interface Message {
     _id: string;
-    content: string;
+    type?: "text" | "file" | "image" | "video" | "audio" | "link";
+
+    content?: string;
+
+    attachment?: {
+        url: string;
+        name: string;
+        size: number;
+        mimeType: string;
+        provider: "s3" | "cloudinary";
+    };
+
     senderId: {
         username: string;
-        // email: string;
     };
 }
 
@@ -27,6 +38,11 @@ export default function ChannelPage() {
 
     const [messages, setMessages] = useState<Message[]>([]);
     const [text, setText] = useState("");
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploading, setUploading] = useState(false);
+
+    const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
     // Load history
     useEffect(() => {
@@ -61,6 +77,99 @@ export default function ChannelPage() {
             socket.disconnect();
         };
     }, [channelId]);
+
+    async function uploadFile(file: File) {
+        const res = await fetch("/api/attachments/presign", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                filename: file.name,
+                mimeType: file.type,
+                size: file.size,
+            }),
+        });
+
+        const data = await res.json();
+
+        // S3
+        if (data.provider === "s3") {
+            await fetch(data.uploadUrl, {
+                method: "PUT",
+                headers: { "Content-Type": file.type },
+                body: file,
+            });
+
+            return {
+                url: data.fileUrl,
+                provider: "s3",
+            };
+        }
+
+        // Cloudinary
+        const form = new FormData();
+        form.append("file", file);
+        form.append("api_key", data.apiKey);
+        form.append("timestamp", data.timestamp);
+        form.append("signature", data.signature);
+        form.append("public_id", data.publicId);
+
+        const cloudRes = await fetch(
+            `https://api.cloudinary.com/v1_1/${data.cloudName}/auto/upload`,
+            {
+                method: "POST",
+                body: form,
+            }
+        );
+
+        const cloudData = await cloudRes.json();
+
+        return {
+            url: cloudData.secure_url,
+            provider: "cloudinary",
+        };
+    }
+
+    async function handleFileSelect(
+        e: React.ChangeEvent<HTMLInputElement>
+    ) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        try {
+            setUploading(true);
+
+            const uploaded = await uploadFile(file);
+
+            const payload = {
+                workspaceId,
+                channelId,
+                type: file.type.startsWith("image/")
+                    ? "image"
+                    : file.type.startsWith("video/")
+                        ? "video"
+                        : "file",
+
+                attachment: {
+                    url: uploaded.url,
+                    name: file.name,
+                    size: file.size,
+                    mimeType: file.type,
+                    provider: uploaded.provider,
+                },
+            };
+
+            // 🔍 DEBUG LOG
+            console.log("FRONTEND EMIT PAYLOAD:", payload);
+
+            socket.emit("send-message", payload);
+
+        } catch (err) {
+            console.error("UPLOAD ERROR:", err);
+            alert("Upload failed");
+        } finally {
+            setUploading(false);
+        }
+    }
 
     function sendMessage() {
         if (!text) return;
@@ -130,7 +239,26 @@ export default function ChannelPage() {
                                 {m.senderId?.username || "Unknown"}
                             </span>
                             <span className="ml-2 text-white">
-                                {m.content}
+
+                                {m.type === "text" && m.content}
+
+                                {m.type === "image" && (
+                                    <img
+                                        src={m.attachment?.url}
+                                        className="max-w-xs rounded mt-1"
+                                    />
+                                )}
+
+                                {m.type === "file" && (
+                                    <a
+                                        href={m.attachment?.url}
+                                        target="_blank"
+                                        className="text-blue-400 underline"
+                                    >
+                                        📎 {m.attachment?.name}
+                                    </a>
+                                )}
+
                             </span>
                         </div>
 
@@ -164,6 +292,21 @@ export default function ChannelPage() {
                             : "Read-only channel"
                     }
                 />
+
+                <input
+                    type="file"
+                    ref={fileInputRef}
+                    hidden
+                    onChange={handleFileSelect}
+                />
+
+                <button
+                    disabled={!canSend || uploading}
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-3 border"
+                >
+                    📎
+                </button>
 
                 <button
                     disabled={!canSend}

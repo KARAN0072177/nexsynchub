@@ -12,6 +12,9 @@ export async function requirePermission(
   );
 
   if (!allowed) {
-    throw new Error("Forbidden");
+    throw {
+      status: 403,
+      message: `Missing permission: ${permission}`,
+    };
   }
 }

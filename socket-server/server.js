@@ -17,15 +17,19 @@ io.on("connection", (socket) => {
     });
 
     // Send message
+    // Send message
     socket.on(
         "send-message",
-        async ({ workspaceId, channelId, content }) => {
+        async ({ workspaceId, channelId, content, type, attachment }) => {
+
+            console.log("SOCKET RECEIVED:", { type, attachment });
+
             try {
                 const cookie = socket.handshake.headers.cookie;
 
                 const res = await axios.post(
                     `http://localhost:3000/api/workspaces/${workspaceId}/channels/${channelId}/messages`,
-                    { content },
+                    { type, content, attachment },
                     {
                         headers: {
                             Cookie: cookie

@@ -65,11 +65,12 @@ export async function POST(
       "chat.send"
     );
 
-    const { content } = await req.json();
+    const { content, type, attachment } = await req.json();
 
-    if (!content) {
+    // Must have either text OR attachment
+    if (!content && !attachment) {
       return NextResponse.json(
-        { error: "Message required" },
+        { error: "Message must contain text or attachment" },
         { status: 400 }
       );
     }
@@ -78,7 +79,9 @@ export async function POST(
       workspaceId,
       channelId,
       senderId: user.userId,
-      content,
+      type: type || "text",
+      content: content || null,
+      attachment: attachment || null
     });
 
     return NextResponse.json({ message });

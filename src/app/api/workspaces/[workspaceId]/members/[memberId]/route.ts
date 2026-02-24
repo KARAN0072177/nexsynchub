@@ -4,11 +4,11 @@ import WorkspaceMember from "@/models/WorkspaceMember";
 import { requireAuth } from "@/lib/requireAuth";
 import { requirePermission } from "@/lib/requirePermission";
 
-export async function GET(
+export async function DELETE(
   req: NextRequest,
-  context: { params: Promise<{ workspaceId: string }> }
+  context: { params: Promise<{ workspaceId: string; memberId: string }> }
 ) {
-  const { workspaceId } = await context.params;
+  const { workspaceId, memberId } = await context.params;
 
   try {
     await connectDB();
@@ -18,19 +18,14 @@ export async function GET(
     await requirePermission(
       user.userId,
       workspaceId,
-      "members.view"
+      "members.remove"
     );
 
-    const members = await WorkspaceMember.find({
-      workspaceId,
-      isActive: true,
-    })
-      .populate("userId", "username")
-      .populate("roleId", "name");
+    await WorkspaceMember.findByIdAndDelete(memberId);
 
-    return NextResponse.json({ members });
+    return NextResponse.json({ success: true });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Forbidden" },
       { status: 403 }

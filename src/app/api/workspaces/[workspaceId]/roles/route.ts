@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import WorkspaceMember from "@/models/WorkspaceMember";
+import WorkspaceRole from "@/models/WorkspaceRole";
 import { requireAuth } from "@/lib/requireAuth";
 import { requirePermission } from "@/lib/requirePermission";
 
@@ -15,22 +15,18 @@ export async function GET(
 
     const user = await requireAuth();
 
+    // Only members with member.updateRole can load roles
     await requirePermission(
       user.userId,
       workspaceId,
       "members.view"
     );
 
-    const members = await WorkspaceMember.find({
-      workspaceId,
-      isActive: true,
-    })
-      .populate("userId", "username")
-      .populate("roleId", "name");
+    const roles = await WorkspaceRole.find({ workspaceId });
 
-    return NextResponse.json({ members });
+    return NextResponse.json({ roles });
 
-  } catch (error) {
+  } catch {
     return NextResponse.json(
       { error: "Forbidden" },
       { status: 403 }

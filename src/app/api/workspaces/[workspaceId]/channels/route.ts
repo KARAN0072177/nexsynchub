@@ -19,7 +19,7 @@ export async function POST(
     await requirePermission(
       user.userId,
       workspaceId,
-      "channels.create"
+      "chat.send"
     );
 
     const { name } = await req.json();
@@ -61,7 +61,7 @@ export async function GET(
     await requirePermission(
       user.userId,
       workspaceId,
-      "chat.view"
+      "chat.send"
     );
 
     const channels = await Channel.find({
