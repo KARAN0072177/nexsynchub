@@ -12,7 +12,7 @@ export async function GET(
   try {
     await connectDB();
 
-    const user = await requireAuth(req);
+    const user = await requireAuth();
 
     const workspace = await Workspace.findById(params.workspaceId);
 
