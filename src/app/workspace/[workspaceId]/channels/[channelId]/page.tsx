@@ -44,6 +44,10 @@ export default function ChannelPage() {
 
     const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
 
+    const [showMentions, setShowMentions] = useState(false);
+    const [mentionQuery, setMentionQuery] = useState("");
+    const [filteredMembers, setFilteredMembers] = useState<any[]>([]);
+
     // Load history
     useEffect(() => {
         // Load messages
@@ -77,6 +81,12 @@ export default function ChannelPage() {
             socket.disconnect();
         };
     }, [channelId]);
+
+    function selectMention(username: string) {
+        const newText = text.replace(/@\w*$/, `@${username} `);
+        setText(newText);
+        setShowMentions(false);
+    }
 
     async function uploadFile(file: File) {
         const res = await fetch("/api/attachments/presign", {
@@ -186,9 +196,33 @@ export default function ChannelPage() {
     }
 
     function openConvertModal(message: any) {
+        if (message.type !== "text") {
+            alert("Only text messages can be converted into tasks.");
+            return;
+        }
+
         setSelectedMessage(message);
         setTitle("");
         setAssignees([]);
+    }
+
+    function renderMessageWithMentions(text: string) {
+        const parts = text.split(/(@\w+)/g);
+
+        return parts.map((part, i) => {
+            if (part.startsWith("@")) {
+                return (
+                    <span
+                        key={i}
+                        className="text-blue-400 font-medium"
+                    >
+                        {part}
+                    </span>
+                );
+            }
+
+            return <span key={i}>{part}</span>;
+        });
     }
 
     async function loadMembers() {
@@ -240,7 +274,7 @@ export default function ChannelPage() {
                             </span>
                             <span className="ml-2 text-white">
 
-                                {m.type === "text" && m.content}
+                                {m.type === "text" && renderMessageWithMentions(m.content || "")}
 
                                 {m.type === "image" && (
                                     <img
@@ -281,16 +315,53 @@ export default function ChannelPage() {
 
             <div className="flex gap-2">
 
+                {showMentions && (
+                    <div className="absolute bottom-16 bg-neutral-800 border rounded w-64 max-h-40 overflow-y-auto z-50">
+
+                        {filteredMembers.length === 0 && (
+                            <p className="p-2 text-sm text-gray-400">
+                                No member found by "{mentionQuery}"
+                            </p>
+                        )}
+
+                        {filteredMembers.map(m => (
+                            <button
+                                key={m.userId._id}
+                                onClick={() => selectMention(m.userId.username)}
+                                className="block w-full text-left px-3 py-2 hover:bg-neutral-700"
+                            >
+                                @{m.userId.username}
+                            </button>
+                        ))}
+                    </div>
+                )}
+
                 <input
                     disabled={!canSend}
                     className="border p-2 flex-1"
                     value={text}
-                    onChange={(e) => setText(e.target.value)}
-                    placeholder={
-                        canSend
-                            ? "Type message..."
-                            : "Read-only channel"
-                    }
+                    onChange={(e) => {
+                        const value = e.target.value;
+                        setText(value);
+
+                        const match = value.match(/@(\w*)$/);
+
+                        if (match) {
+                            const query = match[1].toLowerCase();
+                            setMentionQuery(query);
+
+                            const results = members.filter(m =>
+                                m.userId.username
+                                    .toLowerCase()
+                                    .includes(query)
+                            );
+
+                            setFilteredMembers(results);
+                            setShowMentions(true);
+                        } else {
+                            setShowMentions(false);
+                        }
+                    }}
                 />
 
                 <input

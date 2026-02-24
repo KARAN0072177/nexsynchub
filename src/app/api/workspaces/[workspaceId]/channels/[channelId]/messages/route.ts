@@ -84,6 +84,13 @@ export async function POST(
       attachment: attachment || null
     });
 
+    const populatedMessage = await message.populate(
+      "senderId",
+      "username"
+    );
+
+    return NextResponse.json({ message: populatedMessage });
+
     return NextResponse.json({ message });
 
   } catch {
